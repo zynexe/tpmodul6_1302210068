@@ -8,6 +8,12 @@ class SayaTubeVideo
 
     public SayaTubeVideo(string title)
     {
+        if (title == null)
+            throw new ArgumentNullException("Title cannot be null.");
+
+        if (title.Length > 100)
+            throw new ArgumentException("Title length cannot be more than 100 characters.");
+
         Random random = new Random();
         this.id = random.Next(10000, 99999);
         this.title = title;
@@ -16,7 +22,20 @@ class SayaTubeVideo
 
     public void IncreasePlayCount(int count)
     {
-        this.playCount += count;
+        if (count <= 0)
+            throw new ArgumentOutOfRangeException("Count must be a positive integer.");
+
+        checked
+        {
+            try
+            {
+                this.playCount += count;
+            }
+            catch (OverflowException ex)
+            {
+                throw new InvalidOperationException("Play count exceeded the maximum limit.", ex);
+            }
+        }
     }
 
     public void PrintVideoDetails()
@@ -32,13 +51,32 @@ class Program
     static void Main(string[] args)
     {
         string videoTitle = "Tutorial Design By Contract – Raffa Zuhayr";
-        SayaTubeVideo video = new SayaTubeVideo(videoTitle);
+        SayaTubeVideo video = null;
 
-        video.PrintVideoDetails();
+        try
+        {
+            video = new SayaTubeVideo(videoTitle);
 
-        // tambahkan play count sebanyak 10
-        video.IncreasePlayCount(10);
+            // Tes preconditions
+            //videoTitle = null; // ngetes title precondition
+            //videoTitle = new string('a', 101); // nge test title length precondition
 
-        Console.WriteLine("\nSetelah ditambahkan 10, play count sekarang adalah {0}", video.playCount);
+            video.PrintVideoDetails();
+
+            // Tes exception
+            for (int i = 0; i < 10000001; i++) // nge test overflow exception
+            {
+                 video.IncreasePlayCount(1);
+            }
+
+            
+            video.IncreasePlayCount(100);
+
+            Console.WriteLine("\n play count baru adalah {0}", video.playCount);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error: " + ex.Message);
+        }
     }
 }
